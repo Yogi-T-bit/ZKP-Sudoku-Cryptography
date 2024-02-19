@@ -42,31 +42,28 @@ class ConsoleInterface:
         zkp = ZeroKnowledgeProof(puzzle, solution)
         zkp_results = zkp.run_zkp()
 
-        # Display all commitments for full transparency
-        # self.display_all_commitments(zkp_results["all_commitments"])
-
-        # Display details of the selection made for verification
         self.console.print(f"\nVerification Selection:", style="bold blue")
-        self.console.print(f"Selected Type: {zkp_results['selected_type']}")
-        self.console.print(f"Selected Index: {zkp_results['selected_index']}")
-        self.console.print(f"Selected Values: {zkp_results['selected_values']}")
-        self.console.print(f"Selected Nonces: {zkp_results['selected_nonces']}")
-        self.console.print(f"Selected Commitments: {zkp_results['selected_commitments']}")
-        # self.console.print(f"All Nonces: {zkp_results['all_nonces']}")
+        self.print_nested_dict(zkp_results)
 
-        # Optionally display the selections made if relevant to your context
-        # self.console.print("\nSelections Made:", style="bold blue")
-        # for selection in zkp_results["selections"]:
-        #     self.console.print(f"{selection}")
-
-        # Display the verification process result
         self.console.print("\nVerification Process:", style="bold blue")
-        self.console.print(zkp_results["verification_process"])
 
-    def display_all_commitments(self, commitments):
-        self.console.print("All Commitments:", style="bold blue")
-        for (row, col), commitment in commitments.items():
-            self.console.print(f"({row}, {col}): {commitment}")
+    def print_nested_dict(self, dictionary):
+        for selection_type, selection_results in dictionary.items():
+            self.console.print(f"{selection_type.capitalize()} Selections:", style="bold blue")
+            for index, results in selection_results.items():
+                self.console.print(f"Index: {index}")
+                self.console.print(f"Selected Values: {results['selected_values']}")
+                self.console.print(f"Selected Nonces:")
+                for nonce in results["selected_nonces"]:
+                    self.console.print(f"  - {nonce}")
+                self.print_dict("Selected Commitments", results["selected_commitments"])
+                self.console.print(f"Verification Process: {results['verification_process']}")
+                self.console.print("\n")
+
+    def print_dict(self, description, dictionary):
+        self.console.print(f"{description}:", style="bold blue")
+        for (row, col), dic in dictionary.items():
+            self.console.print(f"({row}, {col}): {dic}")
 
     def run(self):
         level = self.console.input("Select difficulty [easy/medium/hard]: ").strip().lower()
@@ -83,6 +80,7 @@ class ConsoleInterface:
             self.run_zkp_verification(puzzle, solved_board)
         else:
             self.console.print("Failed to solve the puzzle.", style="bold red")
+
 
 if __name__ == "__main__":
     interface = ConsoleInterface()
