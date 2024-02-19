@@ -42,18 +42,31 @@ class ConsoleInterface:
         zkp = ZeroKnowledgeProof(puzzle, solution)
         zkp_results = zkp.run_zkp()
 
-        # Display the commitments sent by Alice
-        self.console.print("Commitment Sent by Alice:", style="bold blue")
-        self.console.print(zkp_results["commitments"])
+        # Display all commitments for full transparency
+        # self.display_all_commitments(zkp_results["all_commitments"])
 
-        # Display the selected row and nonces sent by Alice
-        self.console.print(f"\nSelected {zkp_results['row_index']} Row and Nonces Sent by Alice:", style="bold blue")
-        self.console.print(f"Row: {zkp_results['selected_row']}")
-        self.console.print(f"Nonces: {zkp_results['selected_row_nonces']}")
+        # Display details of the selection made for verification
+        self.console.print(f"\nVerification Selection:", style="bold blue")
+        self.console.print(f"Selected Type: {zkp_results['selected_type']}")
+        self.console.print(f"Selected Index: {zkp_results['selected_index']}")
+        self.console.print(f"Selected Values: {zkp_results['selected_values']}")
+        self.console.print(f"Selected Nonces: {zkp_results['selected_nonces']}")
+        self.console.print(f"Selected Commitments: {zkp_results['selected_commitments']}")
+        # self.console.print(f"All Nonces: {zkp_results['all_nonces']}")
+
+        # Optionally display the selections made if relevant to your context
+        # self.console.print("\nSelections Made:", style="bold blue")
+        # for selection in zkp_results["selections"]:
+        #     self.console.print(f"{selection}")
 
         # Display the verification process result
         self.console.print("\nVerification Process:", style="bold blue")
         self.console.print(zkp_results["verification_process"])
+
+    def display_all_commitments(self, commitments):
+        self.console.print("All Commitments:", style="bold blue")
+        for (row, col), commitment in commitments.items():
+            self.console.print(f"({row}, {col}): {commitment}")
 
     def run(self):
         level = self.console.input("Select difficulty [easy/medium/hard]: ").strip().lower()
