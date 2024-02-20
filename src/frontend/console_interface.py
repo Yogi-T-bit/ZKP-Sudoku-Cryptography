@@ -1,5 +1,9 @@
+import time
+
 from rich.console import Console
 from rich.text import Text
+from rich.panel import Panel
+import keyboard
 import os
 import sys
 
@@ -42,33 +46,123 @@ class ConsoleInterface:
         zkp = ZeroKnowledgeProof(puzzle, solution)
         zkp_results = zkp.run_zkp()
 
-        # Display all commitments for full transparency
-        # self.display_all_commitments(zkp_results["all_commitments"])
-
-        # Display details of the selection made for verification
         self.console.print(f"\nVerification Selection:", style="bold blue")
-        self.console.print(f"Selected Type: {zkp_results['selected_type']}")
-        self.console.print(f"Selected Index: {zkp_results['selected_index']}")
-        self.console.print(f"Selected Values: {zkp_results['selected_values']}")
-        self.console.print(f"Selected Nonces: {zkp_results['selected_nonces']}")
-        self.console.print(f"Selected Commitments: {zkp_results['selected_commitments']}")
-        # self.console.print(f"All Nonces: {zkp_results['all_nonces']}")
+        self.print_nested_dict(zkp_results)
 
-        # Optionally display the selections made if relevant to your context
-        # self.console.print("\nSelections Made:", style="bold blue")
-        # for selection in zkp_results["selections"]:
-        #     self.console.print(f"{selection}")
-
-        # Display the verification process result
         self.console.print("\nVerification Process:", style="bold blue")
-        self.console.print(zkp_results["verification_process"])
 
-    def display_all_commitments(self, commitments):
-        self.console.print("All Commitments:", style="bold blue")
-        for (row, col), commitment in commitments.items():
-            self.console.print(f"({row}, {col}): {commitment}")
+    def print_nested_dict(self, dictionary):
+        for selection_type, selection_results in dictionary.items():
+            self.console.print(f"{selection_type.capitalize()} Selections:", style="bold blue")
+            for index, results in selection_results.items():
+                self.console.print(f"Index: {index}")
+                self.console.print(f"Selected Values: {results['selected_values']}")
+                self.console.print(f"Selected Nonces:")
+                for nonce in results["selected_nonces"]:
+                    self.console.print(f"  - {nonce}")
+                self.print_dict("Selected Commitments", results["selected_commitments"])
+                self.console.print(f"Verification Process: {results['verification_process']}")
+                self.console.print("\n")
+
+    def print_dict(self, description, dictionary):
+        self.console.print(f"{description}:", style="bold blue")
+        for (row, col), dic in dictionary.items():
+            self.console.print(f"({row}, {col}): {dic}")
+
+    # --------------------------------------- Menu ---------------------------------------
+
+    # Display a menu which allows the user to select in which mode to run the zkp protocol.
+    # 1. interactive mode - User is "Veronica" and the PC is "Pole". they start a conversation and the user is asked to provide the nonce and the value for each cell. and the PC will verify the user's input.
+    # 1.1 User can choose which type of selection to provide (row, column, block)
+    # 1.2 User can choose to provide all the selections at once or one by one.
+    # 2. semi automatic mode - PC will shw to user that there are a proof that puzzle is solved and he can show the proof for each type of selection (row, column, block). and the PC will ask the user to provide the type he want to see
+
+    # 3. automatic mode - PC will show to user that there are a proof that puzzle is solved and he can show the proof for each type of selection (row, column, block).
+
+    # 4. exit - exit the program
+
+    # the menu will interact as a prompt selection so user can choose by arrow keys and press enter to select the option.
+
+    def wait_for_input(self, message="Press any key to continue..."):
+        self.console.print(message, style="bold blue")
+        while True:
+            if keyboard.read_event():
+                break
+
+        time.sleep(0.1)
+
+    def interactive_mode(self):
+        # Implement your interactive mode logic here
+        self.console.print("Interactive mode selected: ", style="bold green")
+
+    def semi_automatic_mode(self):
+        # Prompt for difficulty level
+        self.console.print("Semi-automatic mode selected: ", style="bold green")
+        difficulty = self.console.input("Enter the difficulty level (e.g., Easy, Medium, Hard): ")
+        self.console.print(f"Difficulty level set to: [bold]{difficulty}[/]", style="bold green")
+        # ---
+        # Generate puzzle based on the chosen difficulty level
+        puzzle = PuzzleGenerator.generate(level=difficulty)
+        self.console.print("Generated Sudoku Puzzle:", style="bold blue")
+        self.display_puzzle(puzzle)
+        # ---
+        # # You can now use the difficulty variable as needed for your logic
+        # self.wait_for_input()
+
+    def automatic_mode(self):
+        # Implement your automatic mode logic here
+        self.console.print("Automatic mode selected: ", style="bold green")
+
+
+    def show_menu(self, options, index):
+        self.console.clear()
+        for i, option in enumerate(options):
+            if i == index:
+                self.console.print(Panel(f"[bold white on green]{option}[/]", expand=False))
+            else:
+                self.console.print(option)
+
+    def menu(self):
+        # self.console.print("Solved Sudoku Puzzle:", style="bold green")
+        header = Panel("ZKP Sudoku Game Menu Puzzle", style="bold white on blue", expand=False)
+        self.console.print(header)
+
+        self.console.print("ZKP Sudoku Game Menu", style="bold underline green")
+
+        options = ["Interactive mode", "Semi-automatic mode", "Automatic mode", "Exit"]
+        index = 0
+
+        self.show_menu(options, index)
+
+        while True:
+
+            if keyboard.is_pressed('up') and index > 0:
+                index -= 1
+                self.show_menu(options, index)
+                while keyboard.is_pressed('up'):
+                    pass  # Wait until key release
+            elif keyboard.is_pressed('down') and index < len(options) - 1:
+                index += 1
+                self.show_menu(options, index)
+                while keyboard.is_pressed('down'):
+                    pass  # Wait until key release
+            elif keyboard.is_pressed('enter'):
+                if index == 0:
+                    self.interactive_mode()
+                elif index == 1:
+                    self.semi_automatic_mode()
+                elif index == 2:
+                    self.automatic_mode()
+                elif index == 3:
+                    self.console.print("Exiting the program...", style="bold blue")
+                    sys.exit(0)
+                break
 
     def run(self):
+        self.menu()
+        # self.run_auto_mode()
+
+    def run_auto_mode(self):
         level = self.console.input("Select difficulty [easy/medium/hard]: ").strip().lower()
         puzzle = PuzzleGenerator.generate(level)
         self.console.print("Generated Sudoku Puzzle:", style="bold blue")
@@ -83,6 +177,7 @@ class ConsoleInterface:
             self.run_zkp_verification(puzzle, solved_board)
         else:
             self.console.print("Failed to solve the puzzle.", style="bold red")
+
 
 if __name__ == "__main__":
     interface = ConsoleInterface()
