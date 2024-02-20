@@ -69,6 +69,8 @@ class ConsoleInterface:
         for (row, col), dic in dictionary.items():
             self.console.print(f"({row}, {col}): {dic}")
 
+    # --------------------------------------- Menu ---------------------------------------
+
     # Display a menu which allows the user to select in which mode to run the zkp protocol.
     # 1. interactive mode - User is "Veronica" and the PC is "Pole". they start a conversation and the user is asked to provide the nonce and the value for each cell. and the PC will verify the user's input.
     # 1.1 User can choose which type of selection to provide (row, column, block)
@@ -91,19 +93,26 @@ class ConsoleInterface:
 
     def interactive_mode(self):
         # Implement your interactive mode logic here
-        self.console.print("Interactive mode selected", style="bold green")
+        self.console.print("Interactive mode selected: ", style="bold green")
 
     def semi_automatic_mode(self):
         # Prompt for difficulty level
-        self.console.print("Semi-automatic mode selected", style="bold green")
+        self.console.print("Semi-automatic mode selected: ", style="bold green")
         difficulty = self.console.input("Enter the difficulty level (e.g., Easy, Medium, Hard): ")
         self.console.print(f"Difficulty level set to: [bold]{difficulty}[/]", style="bold green")
-        # You can now use the difficulty variable as needed for your logic
-        self.wait_for_input()
+        # ---
+        # Generate puzzle based on the chosen difficulty level
+        puzzle = PuzzleGenerator.generate(level=difficulty)
+        self.console.print("Generated Sudoku Puzzle:", style="bold blue")
+        self.display_puzzle(puzzle)
+        # ---
+        # # You can now use the difficulty variable as needed for your logic
+        # self.wait_for_input()
 
     def automatic_mode(self):
         # Implement your automatic mode logic here
-        self.console.print("Automatic mode selected", style="bold green")
+        self.console.print("Automatic mode selected: ", style="bold green")
+
 
     def show_menu(self, options, index):
         self.console.clear()
@@ -114,12 +123,19 @@ class ConsoleInterface:
                 self.console.print(option)
 
     def menu(self):
+        # self.console.print("Solved Sudoku Puzzle:", style="bold green")
+        header = Panel("ZKP Sudoku Game Menu Puzzle", style="bold white on blue", expand=False)
+        self.console.print(header)
+
+        self.console.print("ZKP Sudoku Game Menu", style="bold underline green")
+
         options = ["Interactive mode", "Semi-automatic mode", "Automatic mode", "Exit"]
         index = 0
 
         self.show_menu(options, index)
 
         while True:
+
             if keyboard.is_pressed('up') and index > 0:
                 index -= 1
                 self.show_menu(options, index)
@@ -143,7 +159,11 @@ class ConsoleInterface:
                 break
 
     def run(self):
-        """level = self.console.input("Select difficulty [easy/medium/hard]: ").strip().lower()
+        self.menu()
+        # self.run_auto_mode()
+
+    def run_auto_mode(self):
+        level = self.console.input("Select difficulty [easy/medium/hard]: ").strip().lower()
         puzzle = PuzzleGenerator.generate(level)
         self.console.print("Generated Sudoku Puzzle:", style="bold blue")
         self.display_puzzle(puzzle)
@@ -156,9 +176,7 @@ class ConsoleInterface:
             # Run Zero Knowledge Proof verification
             self.run_zkp_verification(puzzle, solved_board)
         else:
-            self.console.print("Failed to solve the puzzle.", style="bold red")"""
-
-        self.menu()
+            self.console.print("Failed to solve the puzzle.", style="bold red")
 
 
 if __name__ == "__main__":
