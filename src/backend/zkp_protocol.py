@@ -17,10 +17,6 @@ class ZeroKnowledgeProof:
         combined = '-'.join(map(str, packet)) + f"-{nonce}"
         return hashlib.sha256(combined.encode()).hexdigest()
 
-    """def place_cards(self):
-        # Initialize cards with solution values; could be adjusted for puzzle setup
-        return [[self.solution[i][j] for j in range(9)] for i in range(9)]"""
-
     def place_cards(self):
         # For each cell, create a 'card' with the solution value (simulating faced down placement)
         # For filled cells in the original puzzle, we simulate faced up placement by not hiding the value
@@ -43,6 +39,8 @@ class ZeroKnowledgeProof:
                 val = self.cards[i][j]
                 nonce = self.nonces[i][j]
                 commitments[(i, j)] = self.hash_packet([val], nonce)
+
+        # keep the commitments sorted by row so the console output is consistent
         return commitments
 
     def select_cards_for_selection(self, selection_type, index):
@@ -95,13 +93,13 @@ class ZeroKnowledgeProof:
 
         # Check if all numbers from 1 to 9 are present
         if sorted(card_values) != list(range(1, 10)):
-            print(f"Verification Failed: Not all numbers from 1 to 9 are present in the {selection_type} {index}.")
+            # print(f"Verification Failed: Not all numbers from 1 to 9 are present in the {selection_type} {index}.")
             return False
 
         # Verify each card's commitment
         for selection in selected_cards:
             if not self.verify_selection(selection):
-                print(f"Verification Failed: Commitment mismatch for card in {selection_type} {index}.")
+                # print(f"Verification Failed: Commitment mismatch for card in {selection_type} {index}.")
                 return False
 
         # print(f"Verification Successful: All numbers from 1 to 9 are present in the {selection_type} {index}.")
@@ -131,7 +129,6 @@ class ZeroKnowledgeProof:
             "selected_index": index,  # The index of the selected row/column/grid
             "selected_values": [card[0] for card, _, _ in selected_cards],  # The actual values of the selected row/column/grid
             "selected_nonces": [nonce for _, nonce, _ in selected_cards],  # The nonces used for the selected row/column/grid
-
             "selected_cards": selected_cards,  # Actual values of the selected row/column/grid from the solution
             "selected_commitments": selected_commitments,
             "verification_process": "Verification Successful" if verified else "Verification Failed"
@@ -141,10 +138,7 @@ class ZeroKnowledgeProof:
 
     def get_results(self, selection_type):
         self.zkp_results[selection_type] = {}
-        #for index in range(9):
-        #    self.zkp_results[selection_type][index] = self.verfify_zkp(selection_type)
         indexes = random.sample(range(9), 8)
-        # verify 8 random indexes without duplicates
         indexes = sorted(indexes)
 
         for index in indexes:
